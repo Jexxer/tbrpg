@@ -43,8 +43,8 @@ func (m model) View() string {
 	// Calculate dimensions
 	leftWidth := 15
 	rightWidth := 25
-	centerWidth := m.width - leftWidth - rightWidth - 6 // Account for borders
-	contentHeight := m.height - 10                      // Account for top, bottom, borders
+	centerWidth := m.width - leftWidth - rightWidth - 6
+	contentHeight := m.height - 8
 
 	// Top bar
 	topBar := lipgloss.NewStyle().
@@ -67,19 +67,19 @@ func (m model) View() string {
 		Render(m.renderGameView())
 
 	// Character info (top right)
+	charInfoHeight := contentHeight / 2
 	charInfo := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Width(rightWidth).
-		Height(contentHeight / 2).
+		Height(charInfoHeight).
 		Render(m.renderCharacterInfo())
 
-	charInfoHeight := contentHeight / 2
 	quickActionsHeight := contentHeight - charInfoHeight
 	// Quick actions (bottom right)
 	quickActions := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Width(rightWidth).
-		Height(quickActionsHeight).
+		Height(quickActionsHeight - 2).
 		Render(m.renderQuickActions())
 
 	// Combine right side vertically
