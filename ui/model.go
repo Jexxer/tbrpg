@@ -16,12 +16,10 @@ import (
 
 type FocusedView int
 
-
 type (
 	ModalType    int
 	StorageFocus int
 )
-
 
 const (
 	StorageFocusCategory StorageFocus = iota
@@ -329,7 +327,6 @@ func (m *Model) updateActivityViewport() {
 	content := m.formatActivityLog()
 	m.activityViewport.SetContent(content)
 }
-
 
 // Update storage table with filtered items
 func (m *Model) updateStorageTable() {

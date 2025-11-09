@@ -1,3 +1,4 @@
+// Package views
 package views
 
 import (
@@ -16,13 +17,13 @@ type StorageViewParams struct {
 	StorageFocus        int // 0 = category, 1 = table
 
 	// Component views (already rendered)
-	SearchInputView     string
-	CategoryListView    string
-	TableView           string
+	SearchInputView  string
+	CategoryListView string
+	TableView        string
 
 	// Table configuration
-	AvailableWidth      int
-	AvailableHeight     int
+	AvailableWidth  int
+	AvailableHeight int
 }
 
 const (
