@@ -19,23 +19,24 @@ func (m Model) View() string {
 }
 
 func (m Model) renderBaseView() string {
-	leftWidth := 15
-	rightWidth := 25
-	centerWidth := m.Width - leftWidth - rightWidth - 6
-	contentHeight := m.Height - 15
+	// leftWidth := 15
+	// rightWidth := 25
+	// centerWidth := m.Width - leftWidth - rightWidth - 6
+	// contentHeight := m.Height - 15
+	windowStyles := styles.GetWindowSizes(m.Width, m.Height)
 
 	// Top bar
 	topBar := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		Width(m.Width - 2).
+		Width(windowStyles.TopPanel.Width - windowStyles.BorderOffset).
 		Align(lipgloss.Center).
 		Render("The Town of Starting")
 
 	// Left tabs - use list component
 	leftTabsStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		Width(leftWidth).
-		Height(contentHeight)
+		Width(windowStyles.LeftPanel.Width - windowStyles.BorderOffset).
+		Height(windowStyles.LeftPanel.Height - windowStyles.BorderOffset)
 
 	if m.FocusedView == FocusLeftTabs {
 		leftTabsStyle = leftTabsStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
@@ -48,8 +49,8 @@ func (m Model) renderBaseView() string {
 	// Game view
 	gameViewStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		Width(centerWidth).
-		Height(contentHeight)
+		Width(windowStyles.MainPanel.Width - windowStyles.BorderOffset).
+		Height(windowStyles.MainPanel.Height - windowStyles.BorderOffset)
 
 	if m.FocusedView == FocusGameView {
 		gameViewStyle = gameViewStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
@@ -60,37 +61,35 @@ func (m Model) renderBaseView() string {
 	gameView := gameViewStyle.Render(m.renderGameView())
 
 	// Character info
-	charInfoHeight := contentHeight / 2
 	charInfo := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		Width(rightWidth).
-		Height(charInfoHeight).
+		Width(windowStyles.CharacterInfoPanel.Width - windowStyles.BorderOffset).
+		Height(windowStyles.CharacterInfoPanel.Height - windowStyles.BorderOffset).
 		BorderForeground(lipgloss.Color(styles.UnfocusedColor)).
 		Render(m.renderCharacterInfo())
 
-	// Quick actions - use list component
-	quickActionsHeight := contentHeight - charInfoHeight
-	quickActionsStyle := lipgloss.NewStyle().
+	// Details - use list component
+	detailsStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		Width(rightWidth).
-		Height(quickActionsHeight - 2)
+		Width(windowStyles.DetailsPanel.Width - windowStyles.BorderOffset).
+		Height(windowStyles.DetailsPanel.Height - windowStyles.BorderOffset)
 
-	if m.FocusedView == FocusQuickActions {
-		quickActionsStyle = quickActionsStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
+	if m.FocusedView == FocusDetails {
+		detailsStyle = detailsStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
 	} else {
-		quickActionsStyle = quickActionsStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
+		detailsStyle = detailsStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
-	quickActions := quickActionsStyle.Render(m.quickActionsList.View())
+	details := detailsStyle.Render(m.detailsList.View())
 
-	rightSide := lipgloss.JoinVertical(lipgloss.Left, charInfo, quickActions)
+	rightSide := lipgloss.JoinVertical(lipgloss.Left, charInfo, details)
 	middleSection := lipgloss.JoinHorizontal(lipgloss.Top, leftTabs, gameView, rightSide)
 
 	// Activity log panel
 	activityStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		Width(m.Width - 2).
-		Height(5)
+		Width(windowStyles.ActivityPanel.Width - windowStyles.BorderOffset).
+		Height(windowStyles.ActivityPanel.Height - windowStyles.BorderOffset)
 
 	if m.FocusedView == FocusActivityLog {
 		activityStyle = activityStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
@@ -110,7 +109,7 @@ func (m Model) renderBaseView() string {
 
 	commandLineStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		Width(m.Width - 2)
+		Width(windowStyles.CommandPanel.Width - windowStyles.BorderOffset)
 
 	if m.FocusedView == FocusCommandLine {
 		commandLineStyle = commandLineStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
@@ -194,28 +193,25 @@ func (m Model) renderGameView() string {
 }
 
 func (m Model) renderStorageView() string {
-	topBarHeight := 3
-	commandLineHeight := 3
-	activityLogHeight := 7
-	storageSearchBarHeight := 3
+	ws := styles.GetWindowSizes(m.Width, m.Height)
 
 	// Calculate available dimensions
-	availableWidth := m.Width - 15 - 25 - 10
-	availableHeight := m.Height - topBarHeight - commandLineHeight - activityLogHeight - storageSearchBarHeight
+	availableWidth := ws.MainPanel.Width - ws.BorderOffset
+	availableHeight := ws.MainPanel.Height - ws.BorderOffset
+	searchBarHeight := 3
 
 	// Update input width
-	m.storageSearchInput.Width = availableWidth - 29
+	m.storageSearchInput.Width = availableWidth - 33
 
 	// Update table dimensions
-	totalWidth := availableWidth - 25
-	qtyWidth := 10
-	valueWidth := 10
-	nameWidth := totalWidth - (qtyWidth + valueWidth)
+	qtyWidth := 4
+	valueWidth := 6
+	nameWidth := 10
 
 	m.storageTable.Columns()[0].Width = nameWidth
 	m.storageTable.Columns()[1].Width = qtyWidth
 	m.storageTable.Columns()[2].Width = valueWidth
-	m.storageTable.SetHeight(availableHeight - 4)
+	m.storageTable.SetHeight(availableHeight - searchBarHeight - ws.BorderOffset)
 
 	// Map StorageFocus to int for views package
 	var focusInt int

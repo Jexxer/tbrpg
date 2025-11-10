@@ -37,7 +37,7 @@ const (
 const (
 	FocusLeftTabs FocusedView = iota
 	FocusGameView
-	FocusQuickActions
+	FocusDetails
 	FocusActivityLog
 	FocusCommandLine
 )
@@ -52,11 +52,11 @@ type Model struct {
 	GameState *game.State
 
 	// Bubbles components
-	leftTabsList     list.Model
-	quickActionsList list.Model
-	resourcesTable   table.Model
-	commandInput     textinput.Model
-	commandMode      bool
+	leftTabsList   list.Model
+	detailsList    list.Model
+	resourcesTable table.Model
+	commandInput   textinput.Model
+	commandMode    bool
 
 	// Activity Log
 	activityViewport viewport.Model
@@ -124,19 +124,19 @@ func InitialModel() Model {
 	leftTabsList.SetFilteringEnabled(false)
 	leftTabsList.SetShowTitle(false)
 
-	// Setup quick actions list
-	quickActionsItems := []list.Item{
+	// Setup details list
+	detailsItems := []list.Item{
 		listItem{title: "[A]ttack"},
 		listItem{title: "[G]ather"},
 		listItem{title: "[C]raft"},
 		listItem{title: "[I]nventory"},
 	}
 
-	quickActionsList := list.New(quickActionsItems, compactDelegate{}, 20, 5)
-	quickActionsList.SetShowHelp(false)
-	quickActionsList.SetShowStatusBar(false)
-	quickActionsList.SetFilteringEnabled(false)
-	quickActionsList.SetShowTitle(false)
+	detailsList := list.New(detailsItems, compactDelegate{}, 20, 5)
+	detailsList.SetShowHelp(false)
+	detailsList.SetShowStatusBar(false)
+	detailsList.SetFilteringEnabled(false)
+	detailsList.SetShowTitle(false)
 
 	// Setup resources table
 	columns := []table.Column{
@@ -162,7 +162,7 @@ func InitialModel() Model {
 
 	// Setup command input
 	commandInput := textinput.New()
-	// commandInput.Placeholder = "Enter command..." // TODO: bugged rn, only shows first char of placeholder
+	commandInput.Placeholder = "Enter command..." // TODO: bugged rn, only shows first char of placeholder
 	commandInput.CharLimit = 100
 
 	// Initialize game state
@@ -172,7 +172,7 @@ func InitialModel() Model {
 	storageSearchInput := textinput.New()
 	storageSearchInput.Placeholder = "Search items... (? for help)"
 	storageSearchInput.CharLimit = 100
-	storageSearchInput.Width = 50
+	storageSearchInput.Width = 25
 
 	// Setup storage category list
 	categories := game.GetCategories()
@@ -199,7 +199,7 @@ func InitialModel() Model {
 		table.WithColumns(storageColumns),
 		table.WithRows([]table.Row{}), // Will populate with filtered results
 		table.WithFocused(false),
-		table.WithHeight(10),
+		table.WithHeight(20), // FIX: This doesn't seem to do anything, probably gets over-written someewhere
 	)
 
 	tableStyles := table.DefaultStyles()
@@ -230,7 +230,7 @@ func InitialModel() Model {
 		ActiveTab:           0,
 		GameState:           gameState,
 		leftTabsList:        leftTabsList,
-		quickActionsList:    quickActionsList,
+		detailsList:         detailsList,
 		resourcesTable:      resourcesTable,
 		commandInput:        commandInput,
 		commandMode:         false,

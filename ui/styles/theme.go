@@ -41,6 +41,12 @@ type styles struct {
 	Width  int
 }
 
+type storage struct {
+	Categories styles
+	Table      styles
+	Search     styles
+}
+
 type WindowStyles struct {
 	TopPanel           styles
 	LeftPanel          styles
@@ -49,18 +55,20 @@ type WindowStyles struct {
 	DetailsPanel       styles
 	ActivityPanel      styles
 	CommandPanel       styles
+	BorderOffset       int
+	Storage            storage
 }
 
 func GetWindowSizes(terminalWidth int, terminalHeight int) *WindowStyles {
 	topPanelHeight := 3
 	topPanelWidth := terminalWidth
 
-	leftPanelWidth := 25
+	leftPanelWidth := 24
 
-	characterInfoPanelWidth := 25
+	characterInfoPanelWidth := 24
 	characterInfoPanelHeight := 9
 
-	detailsPanelWidth := 25
+	detailsPanelWidth := characterInfoPanelWidth
 
 	activityPanelHeight := 7
 	activityPanelWidth := terminalWidth
@@ -76,6 +84,22 @@ func GetWindowSizes(terminalWidth int, terminalHeight int) *WindowStyles {
 
 	detailsPanelHeight := terminalHeight - topPanelHeight - characterInfoPanelHeight - activityPanelHeight - commandPanelHeight
 
+	// Storage View Styles
+	categoryWidth := 20
+	categoryHeight := 10
+
+	searchInputHeight := 3
+	searchInputWidth := mainPanelWidth
+
+	tableHeight := mainPanelHeight - searchInputHeight
+	tableWidth := mainPanelWidth - categoryWidth
+
+	storageStyles := storage{
+		Categories: styles{Width: categoryWidth, Height: categoryHeight},
+		Table:      styles{Width: tableWidth, Height: tableHeight},
+		Search:     styles{Width: searchInputWidth, Height: searchInputHeight},
+	}
+
 	return &WindowStyles{
 		TopPanel:           styles{Width: topPanelWidth, Height: topPanelHeight},
 		LeftPanel:          styles{Width: leftPanelWidth, Height: leftPanelHeight},
@@ -84,6 +108,8 @@ func GetWindowSizes(terminalWidth int, terminalHeight int) *WindowStyles {
 		DetailsPanel:       styles{Width: detailsPanelWidth, Height: detailsPanelHeight},
 		ActivityPanel:      styles{Width: activityPanelWidth, Height: activityPanelHeight},
 		CommandPanel:       styles{Width: commandPanelWidth, Height: commandPanelHeight},
+		BorderOffset:       2,
+		Storage:            storageStyles,
 	}
 }
 

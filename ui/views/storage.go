@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jexxer/tbrpg/game"
+	"github.com/jexxer/tbrpg/ui/styles"
 )
 
 // StorageViewParams contains all the data needed to render the storage view
@@ -33,30 +34,24 @@ const (
 
 // RenderStorageView renders the storage view with category list and items table
 func RenderStorageView(params StorageViewParams) string {
+	ws := styles.GetWindowSizes(params.Width, params.Height)
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205"))
-	topBarHeight := 3
-	commandLineHeight := 3
-	activityLogHeight := 7
-	storageSearchBarHeight := 3
 
 	// Calculate available dimensions
-	availableWidth := params.Width - 15 - 25 - 10
-	availableHeight := params.Height - topBarHeight - commandLineHeight - activityLogHeight - storageSearchBarHeight
 
 	// Search bar
 	searchBarStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, true, false).
-		Padding(0, 1)
+		Padding(0, 1) //
 
 	searchBar := searchBarStyle.Render("Search: " + params.SearchInputView + " (press / to search)")
 
 	// Layout: Category list on left, table on right
-	categoryWidth := 20
-	tableWidth := availableWidth - categoryWidth + 1
+	tableWidth := ws.MainPanel.Width - ws.Storage.Categories.Width - 5 // includes border (5 is magical?)
 
 	// Category panel with focus indicator
 	categoryStyle := lipgloss.NewStyle().
-		Width(categoryWidth).
+		Width(ws.Storage.Categories.Width).
 		Height(len(game.GetCategories()))
 
 	// Add border to show focus
@@ -77,7 +72,7 @@ func RenderStorageView(params StorageViewParams) string {
 	// Table panel with focus indicator
 	tableStyle := lipgloss.NewStyle().
 		Width(tableWidth).
-		Height(availableHeight - 4)
+		Height(ws.MainPanel.Height - ws.Storage.Search.Height - 4)
 
 	// Add border to show focus
 	if params.StorageFocus == StorageFocusTable {

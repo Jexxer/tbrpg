@@ -3,11 +3,14 @@ package ui
 import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jexxer/tbrpg/ui/styles"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+
+	ws := styles.GetWindowSizes(m.Width, m.Height)
 
 	switch msg := msg.(type) {
 
@@ -16,17 +19,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Height = msg.Height
 
 		// Update component sizes
-		leftTabsHeight := m.Height - 15
-		m.leftTabsList.SetHeight(leftTabsHeight)
-		m.quickActionsList.SetHeight(leftTabsHeight/2 - 2)
+		m.leftTabsList.SetHeight(ws.LeftPanel.Height - ws.BorderOffset)
+		m.detailsList.SetHeight(ws.DetailsPanel.Height - ws.BorderOffset)
 
 		// Update activity viewport size
-		m.activityViewport.Width = m.Width - 4
-		m.activityViewport.Height = 5
+		m.activityViewport.Width = ws.ActivityPanel.Width
+		m.activityViewport.Height = ws.ActivityPanel.Height - ws.BorderOffset
 
 		// Update storage components
 		m.storageCategoryList.SetHeight(8)
-		m.storageTable.SetHeight(leftTabsHeight - 10)
+		m.storageTable.SetHeight(ws.MainPanel.Height - 10)
 
 		return m, nil
 
@@ -43,23 +45,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if msg.Action == tea.MouseActionPress && msg.Button == tea.MouseButtonLeft {
 			x, y := msg.X, msg.Y
-			leftWidth := 15
-			rightWidth := 25
-			contentHeight := m.Height - 15 // Updated for activity log
 
 			// Top bar (rows 0-2)
-			if y >= 0 && y <= 2 {
+			if y >= 0 && y <= ws.TopPanel.Height-1 {
 				return m, nil
 			}
 
 			// Activity log (7 rows above command line)
-			if y >= m.Height-10 && y < m.Height-3 {
+			if y >= m.Height-ws.CommandPanel.Height-ws.ActivityPanel.Height && y < m.Height-ws.CommandPanel.Height {
 				m.FocusedView = FocusActivityLog
 				return m, nil
 			}
 
 			// Command line (bottom 3 rows)
-			if y >= m.Height-3 {
+			if y >= m.Height-ws.CommandPanel.Height {
 				m.FocusedView = FocusCommandLine
 				m.commandMode = true
 				m.commandInput.Focus()
@@ -67,13 +66,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			// Middle section (between top bar and activity log)
-			if y >= 3 && y < m.Height-10 {
-				if x <= leftWidth+1 {
+			// if below top bar and above activity box
+			if y >= ws.TopPanel.Height && y < m.Height-ws.CommandPanel.Height-ws.ActivityPanel.Height {
+				// if x less than or equal to left pannel width
+				if x <= ws.LeftPanel.Width-1 {
 					m.FocusedView = FocusLeftTabs
-				} else if x >= m.Width-rightWidth-2 {
-					charInfoHeight := contentHeight / 2
-					if y >= 3+charInfoHeight+2 {
-						m.FocusedView = FocusQuickActions
+
+					// if we are in x bounds for right side
+				} else if x >= m.Width-ws.CharacterInfoPanel.Width {
+					// if we are below the characterInfoPanel (we check above in activity log conditionals)
+					if y >= ws.TopPanel.Height+ws.CharacterInfoPanel.Height {
+						m.FocusedView = FocusDetails
 					}
 				} else {
 					m.FocusedView = FocusGameView
@@ -101,11 +104,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "H":
 				m.FocusedView = FocusLeftTabs
 			case "L":
-				m.FocusedView = FocusQuickActions
+				m.FocusedView = FocusDetails
 			case "J":
 				m.FocusedView = FocusActivityLog
 			}
-		case FocusQuickActions:
+		case FocusDetails:
 			switch msg.String() {
 			case "H":
 				m.FocusedView = FocusGameView
@@ -227,8 +230,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case FocusLeftTabs:
 			m.leftTabsList, cmd = m.leftTabsList.Update(msg)
 			cmds = append(cmds, cmd)
-		case FocusQuickActions:
-			m.quickActionsList, cmd = m.quickActionsList.Update(msg)
+		case FocusDetails:
+			m.detailsList, cmd = m.detailsList.Update(msg)
 			cmds = append(cmds, cmd)
 
 		case FocusGameView:
