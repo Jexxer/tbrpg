@@ -12,6 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jexxer/tbrpg/game"
+	"github.com/jexxer/tbrpg/ui/styles"
 )
 
 type FocusedView int
@@ -42,11 +43,10 @@ const (
 )
 
 type Model struct {
-	Width        int
-	Height       int
-	FocusedView  FocusedView
-	ActiveTab    int // Which tab's content is showing in game view
-	FocusedColor string
+	Width       int
+	Height      int
+	FocusedView FocusedView
+	ActiveTab   int // Which tab's content is showing in game view
 
 	// Game state
 	GameState *game.State
@@ -97,7 +97,7 @@ func (d compactDelegate) Render(w io.Writer, m list.Model, index int, item list.
 	// Highlight selected item
 	if index == m.Index() {
 		str = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#27F576")).
+			Foreground(lipgloss.Color(styles.FocusedColor)).
 			Bold(true).
 			Render("> " + str)
 	} else {
@@ -205,12 +205,12 @@ func InitialModel() Model {
 	tableStyles := table.DefaultStyles()
 	tableStyles.Header = tableStyles.Header.
 		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240")).
+		BorderForeground(lipgloss.Color(styles.BorderColor)).
 		BorderBottom(true).
 		Bold(false)
 	tableStyles.Selected = tableStyles.Selected.
-		Foreground(lipgloss.Color("#000000")).
-		Background(lipgloss.Color("#27F576")).
+		Foreground(lipgloss.Color(styles.BlackColor)).
+		Background(lipgloss.Color(styles.FocusedColor)).
 		Bold(false)
 	storageTable.SetStyles(tableStyles)
 
@@ -227,7 +227,6 @@ func InitialModel() Model {
 		Width:               80,
 		Height:              24,
 		FocusedView:         FocusGameView,
-		FocusedColor:        "#27F576",
 		ActiveTab:           0,
 		GameState:           gameState,
 		leftTabsList:        leftTabsList,

@@ -1,7 +1,9 @@
 // Package styles is for holding all relevant common styles
 package styles
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+)
 
 // Layout dimensions
 const (
@@ -32,6 +34,57 @@ var CategoryColors = map[string]lipgloss.Color{
 	"System":      "240",
 	"Command":     "240",
 	"Storage":     "33",
+}
+
+type styles struct {
+	Height int
+	Width  int
+}
+
+type WindowStyles struct {
+	TopPanel           styles
+	LeftPanel          styles
+	MainPanel          styles
+	CharacterInfoPanel styles
+	DetailsPanel       styles
+	ActivityPanel      styles
+	CommandPanel       styles
+}
+
+func GetWindowSizes(terminalWidth int, terminalHeight int) *WindowStyles {
+	topPanelHeight := 3
+	topPanelWidth := terminalWidth
+
+	leftPanelWidth := 25
+
+	characterInfoPanelWidth := 25
+	characterInfoPanelHeight := 9
+
+	detailsPanelWidth := 25
+
+	activityPanelHeight := 7
+	activityPanelWidth := terminalWidth
+
+	commandPanelHeight := 3
+	commandPanelWidth := terminalWidth
+
+	// Caclulate remaining
+	mainPanelWidth := terminalWidth - leftPanelWidth - characterInfoPanelWidth
+	mainPanelHeight := terminalHeight - topPanelHeight - activityPanelHeight - commandPanelHeight
+
+	leftPanelHeight := terminalHeight - topPanelHeight - activityPanelHeight - commandPanelHeight
+
+	detailsPanelHeight := terminalHeight - topPanelHeight - characterInfoPanelHeight - activityPanelHeight - commandPanelHeight
+
+	return &WindowStyles{
+		TopPanel:           styles{Width: topPanelWidth, Height: topPanelHeight},
+		LeftPanel:          styles{Width: leftPanelWidth, Height: leftPanelHeight},
+		MainPanel:          styles{Width: mainPanelWidth, Height: mainPanelHeight},
+		CharacterInfoPanel: styles{Width: characterInfoPanelWidth, Height: characterInfoPanelHeight},
+		DetailsPanel:       styles{Width: detailsPanelWidth, Height: detailsPanelHeight},
+		ActivityPanel:      styles{Width: activityPanelWidth, Height: activityPanelHeight},
+		CommandPanel:       styles{Width: commandPanelWidth, Height: commandPanelHeight},
+	}
 }
 
 // GetCategoryColor returns the color for a category, or white if not found

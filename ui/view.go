@@ -3,6 +3,7 @@ package ui
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jexxer/tbrpg/ui/styles"
 	"github.com/jexxer/tbrpg/ui/views"
 )
 
@@ -27,7 +28,8 @@ func (m Model) renderBaseView() string {
 	topBar := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Width(m.Width - 2).
-		Render(" The Town of Starting")
+		Align(lipgloss.Center).
+		Render("The Town of Starting")
 
 	// Left tabs - use list component
 	leftTabsStyle := lipgloss.NewStyle().
@@ -36,9 +38,9 @@ func (m Model) renderBaseView() string {
 		Height(contentHeight)
 
 	if m.FocusedView == FocusLeftTabs {
-		leftTabsStyle = leftTabsStyle.BorderForeground(lipgloss.Color(m.FocusedColor))
+		leftTabsStyle = leftTabsStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
 	} else {
-		leftTabsStyle = leftTabsStyle.BorderForeground(lipgloss.Color("#9E9E9E"))
+		leftTabsStyle = leftTabsStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
 	leftTabs := leftTabsStyle.Render(m.leftTabsList.View())
@@ -50,9 +52,9 @@ func (m Model) renderBaseView() string {
 		Height(contentHeight)
 
 	if m.FocusedView == FocusGameView {
-		gameViewStyle = gameViewStyle.BorderForeground(lipgloss.Color(m.FocusedColor))
+		gameViewStyle = gameViewStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
 	} else {
-		gameViewStyle = gameViewStyle.BorderForeground(lipgloss.Color("#9E9E9E"))
+		gameViewStyle = gameViewStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
 	gameView := gameViewStyle.Render(m.renderGameView())
@@ -63,7 +65,7 @@ func (m Model) renderBaseView() string {
 		Border(lipgloss.RoundedBorder()).
 		Width(rightWidth).
 		Height(charInfoHeight).
-		BorderForeground(lipgloss.Color("#9E9E9E")).
+		BorderForeground(lipgloss.Color(styles.UnfocusedColor)).
 		Render(m.renderCharacterInfo())
 
 	// Quick actions - use list component
@@ -74,9 +76,9 @@ func (m Model) renderBaseView() string {
 		Height(quickActionsHeight - 2)
 
 	if m.FocusedView == FocusQuickActions {
-		quickActionsStyle = quickActionsStyle.BorderForeground(lipgloss.Color(m.FocusedColor))
+		quickActionsStyle = quickActionsStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
 	} else {
-		quickActionsStyle = quickActionsStyle.BorderForeground(lipgloss.Color("#9E9E9E"))
+		quickActionsStyle = quickActionsStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
 	quickActions := quickActionsStyle.Render(m.quickActionsList.View())
@@ -91,9 +93,9 @@ func (m Model) renderBaseView() string {
 		Height(5)
 
 	if m.FocusedView == FocusActivityLog {
-		activityStyle = activityStyle.BorderForeground(lipgloss.Color(m.FocusedColor))
+		activityStyle = activityStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
 	} else {
-		activityStyle = activityStyle.BorderForeground(lipgloss.Color("#9E9E9E"))
+		activityStyle = activityStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
 	activityLog := activityStyle.Render(m.activityViewport.View())
@@ -111,9 +113,9 @@ func (m Model) renderBaseView() string {
 		Width(m.Width - 2)
 
 	if m.FocusedView == FocusCommandLine {
-		commandLineStyle = commandLineStyle.BorderForeground(lipgloss.Color(m.FocusedColor))
+		commandLineStyle = commandLineStyle.BorderForeground(lipgloss.Color(styles.FocusedColor))
 	} else {
-		commandLineStyle = commandLineStyle.BorderForeground(lipgloss.Color("#9E9E9E"))
+		commandLineStyle = commandLineStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
 	commandLine := commandLineStyle.Render(commandLineContent)
@@ -226,7 +228,7 @@ func (m Model) renderStorageView() string {
 	return views.RenderStorageView(views.StorageViewParams{
 		Width:               m.Width,
 		Height:              m.Height,
-		FocusedColor:        m.FocusedColor,
+		FocusedColor:        styles.FocusedColor,
 		StorageSearchActive: m.storageSearchActive,
 		StorageFocus:        focusInt,
 		SearchInputView:     m.storageSearchInput.View(),

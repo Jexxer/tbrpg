@@ -48,12 +48,7 @@ func RenderStorageView(params StorageViewParams) string {
 		Border(lipgloss.NormalBorder(), false, false, true, false).
 		Padding(0, 1)
 
-	var searchBar string
-	if params.StorageSearchActive {
-		searchBar = searchBarStyle.Render("Search: " + params.SearchInputView)
-	} else {
-		searchBar = searchBarStyle.Render("Search: " + params.SearchInputView + " (press / to search)")
-	}
+	searchBar := searchBarStyle.Render("Search: " + params.SearchInputView + " (press / to search)")
 
 	// Layout: Category list on left, table on right
 	categoryWidth := 20

@@ -16,9 +16,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Height = msg.Height
 
 		// Update component sizes
-		contentHeight := m.Height - 15
-		m.leftTabsList.SetHeight(contentHeight)
-		m.quickActionsList.SetHeight(contentHeight/2 - 2)
+		leftTabsHeight := m.Height - 15
+		m.leftTabsList.SetHeight(leftTabsHeight)
+		m.quickActionsList.SetHeight(leftTabsHeight/2 - 2)
 
 		// Update activity viewport size
 		m.activityViewport.Width = m.Width - 4
@@ -26,7 +26,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Update storage components
 		m.storageCategoryList.SetHeight(8)
-		m.storageTable.SetHeight(contentHeight - 10)
+		m.storageTable.SetHeight(leftTabsHeight - 10)
 
 		return m, nil
 
