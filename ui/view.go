@@ -3,15 +3,16 @@ package ui
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jexxer/tbrpg/ui/shared"
+	"github.com/jexxer/tbrpg/ui/storage"
 	"github.com/jexxer/tbrpg/ui/styles"
-	"github.com/jexxer/tbrpg/ui/views"
 )
 
 func (m Model) View() string {
 	baseView := m.renderBaseView()
 
 	// Overlay modal if active
-	if m.activeModal != ModalNone {
+	if m.modal.IsActive() {
 		return m.renderModalOverlay(baseView)
 	}
 
@@ -44,7 +45,7 @@ func (m Model) renderBaseView() string {
 		leftTabsStyle = leftTabsStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
-	leftTabs := leftTabsStyle.Render(m.leftTabsList.View())
+	leftTabs := leftTabsStyle.Render(m.navigation.View())
 
 	// Game view
 	gameViewStyle := lipgloss.NewStyle().
@@ -97,16 +98,9 @@ func (m Model) renderBaseView() string {
 		activityStyle = activityStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
-	activityLog := activityStyle.Render(m.activityViewport.View())
+	activityLog := activityStyle.Render(m.activity.View())
 
 	// Command line
-	var commandLineContent string
-	if m.commandMode {
-		commandLineContent = m.commandInput.View()
-	} else {
-		commandLineContent = " > Commands - ? for help - Press ':' to enter command mode"
-	}
-
 	commandLineStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Width(windowStyles.CommandPanel.Width - windowStyles.BorderOffset)
@@ -117,7 +111,7 @@ func (m Model) renderBaseView() string {
 		commandLineStyle = commandLineStyle.BorderForeground(lipgloss.Color(styles.UnfocusedColor))
 	}
 
-	commandLine := commandLineStyle.Render(commandLineContent)
+	commandLine := commandLineStyle.Render(m.command.View())
 
 	return lipgloss.JoinVertical(lipgloss.Left, topBar, middleSection, activityLog, commandLine)
 }
@@ -125,12 +119,12 @@ func (m Model) renderBaseView() string {
 func (m Model) renderModalOverlay(base string) string {
 	var modalContent string
 
-	switch m.activeModal {
-	case ModalHelp:
+	switch m.modal.GetActive() {
+	case shared.ModalHelp:
 		modalContent = m.renderHelpModal()
-	case ModalSaveSearch:
+	case shared.ModalSaveSearch:
 		modalContent = m.renderSaveSearchModal()
-	case ModalLoadSearch:
+	case shared.ModalLoadSearch:
 		modalContent = m.renderLoadSearchModal()
 	default:
 		return base
@@ -157,18 +151,19 @@ func (m Model) renderModalOverlay(base string) string {
 }
 
 func (m Model) renderHelpModal() string {
-	return views.RenderHelpModal()
+	return storage.RenderHelpModal()
 }
 
 func (m Model) renderSaveSearchModal() string {
-	return views.RenderSaveSearchModal(
-		m.storageSearchInput.Value(),
-		m.modalInput.View(),
+	// TODO: Get search query from storage component
+	return storage.RenderSaveSearchModal(
+		"placeholder",
+		m.modal.GetInputView(),
 	)
 }
 
 func (m Model) renderLoadSearchModal() string {
-	return views.RenderLoadSearchModal(m.GameState.SavedSearches)
+	return storage.RenderLoadSearchModal(m.GameState.SavedSearches)
 }
 
 func (m Model) renderGameView() string {
@@ -193,46 +188,7 @@ func (m Model) renderGameView() string {
 }
 
 func (m Model) renderStorageView() string {
-	ws := styles.GetWindowSizes(m.Width, m.Height)
-
-	// Calculate available dimensions
-	availableWidth := ws.MainPanel.Width - ws.BorderOffset
-	availableHeight := ws.MainPanel.Height - ws.BorderOffset
-	searchBarHeight := 3
-
-	// Update input width
-	m.storageSearchInput.Width = availableWidth - 33 // padding and strings for help
-
-	// Update table dimensions
-	qtyWidth := 10                                                                        // enough for 999,999 before rolling over to 1M
-	valueWidth := 10                                                                      // like above
-	nameWidth := availableWidth - ws.Storage.Categories.Width - qtyWidth - valueWidth - 9 // remaining amount
-
-	m.storageTable.Columns()[0].Width = nameWidth
-	m.storageTable.Columns()[1].Width = qtyWidth
-	m.storageTable.Columns()[2].Width = valueWidth
-	m.storageTable.SetHeight(availableHeight - searchBarHeight - ws.BorderOffset)
-
-	// Map StorageFocus to int for views package
-	var focusInt int
-	if m.storageFocus == StorageFocusCategory {
-		focusInt = views.StorageFocusCategory
-	} else {
-		focusInt = views.StorageFocusTable
-	}
-
-	return views.RenderStorageView(views.StorageViewParams{
-		Width:               m.Width,
-		Height:              m.Height,
-		FocusedColor:        styles.FocusedColor,
-		StorageSearchActive: m.storageSearchActive,
-		StorageFocus:        focusInt,
-		SearchInputView:     m.storageSearchInput.View(),
-		CategoryListView:    m.storageCategoryList.View(),
-		TableView:           m.storageTable.View(),
-		AvailableWidth:      availableWidth,
-		AvailableHeight:     availableHeight,
-	})
+	return m.storage.View(m.Width, m.Height)
 }
 
 func (m Model) renderCharacterInfo() string {

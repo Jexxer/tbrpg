@@ -3,36 +3,16 @@ package ui
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/jexxer/tbrpg/game"
-	"github.com/jexxer/tbrpg/ui/styles"
+	"github.com/jexxer/tbrpg/ui/shared"
+	"github.com/jexxer/tbrpg/ui/storage"
 )
 
 type FocusedView int
-
-type (
-	ModalType    int
-	StorageFocus int
-)
-
-const (
-	StorageFocusCategory StorageFocus = iota
-	StorageFocusTable
-)
-
-const (
-	ModalNone ModalType = iota
-	ModalHelp
-	ModalSaveSearch
-	ModalLoadSearch
-)
 
 const (
 	FocusLeftTabs FocusedView = iota
@@ -51,26 +31,16 @@ type Model struct {
 	// Game state
 	GameState *game.State
 
-	// Bubbles components
-	leftTabsList   list.Model
+	// View components
+	navigation shared.NavigationView
+	storage    storage.View
+	activity   shared.ActivityView
+	command    shared.CommandView
+	modal      shared.ModalView
+
+	// Legacy components (to be refactored later)
 	detailsList    list.Model
 	resourcesTable table.Model
-	commandInput   textinput.Model
-	commandMode    bool
-
-	// Activity Log
-	activityViewport viewport.Model
-
-	// Storage system
-	storageSearchInput  textinput.Model
-	storageCategoryList list.Model
-	storageTable        table.Model
-	storageSearchActive bool
-	storageFocus        StorageFocus
-
-	// Modal system
-	activeModal ModalType
-	modalInput  textinput.Model
 }
 
 type listItem struct {
@@ -93,12 +63,9 @@ func (d compactDelegate) Render(w io.Writer, m list.Model, index int, item list.
 
 	str := i.title
 
-	// Highlight selected item
+	// Highlight selected item (placeholder for legacy components)
 	if index == m.Index() {
-		str = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(styles.FocusedColor)).
-			Bold(true).
-			Render("> " + str)
+		str = "> " + str
 	} else {
 		str = "  " + str
 	}
@@ -107,23 +74,7 @@ func (d compactDelegate) Render(w io.Writer, m list.Model, index int, item list.
 }
 
 func InitialModel() Model {
-	leftTabsItems := []list.Item{
-		listItem{title: "Navigation"},
-		listItem{title: "Storage"},
-		listItem{title: "Equipment"},
-		listItem{title: "Gathering"},
-		listItem{title: "Processing"},
-		listItem{title: "Crafting"},
-		listItem{title: "Quests"},
-	}
-
-	leftTabsList := list.New(leftTabsItems, compactDelegate{}, 15, 10)
-	leftTabsList.SetShowHelp(false)
-	leftTabsList.SetShowStatusBar(false)
-	leftTabsList.SetFilteringEnabled(false)
-	leftTabsList.SetShowTitle(false)
-
-	// Setup details list
+	// Setup details list (legacy component - to be refactored)
 	detailsItems := []list.Item{
 		listItem{title: "[A]ttack"},
 		listItem{title: "[G]ather"},
@@ -137,7 +88,7 @@ func InitialModel() Model {
 	detailsList.SetFilteringEnabled(false)
 	detailsList.SetShowTitle(false)
 
-	// Setup resources table
+	// Setup resources table (legacy component - to be refactored)
 	columns := []table.Column{
 		{Title: "Resource", Width: 15},
 		{Title: "Quantity", Width: 10},
@@ -159,97 +110,37 @@ func InitialModel() Model {
 		table.WithHeight(7),
 	)
 
-	// Setup command input
-	commandInput := textinput.New()
-	commandInput.Placeholder = "Enter command..." // TODO: bugged rn, only shows first char of placeholder
-	commandInput.CharLimit = 100
-	commandInput.Width = 25
-
 	// Initialize game state
 	gameState := game.NewState()
 
-	// Setup storage search input
-	storageSearchInput := textinput.New()
-	storageSearchInput.Placeholder = "Search items... (? for help)"
-	storageSearchInput.CharLimit = 100
-	storageSearchInput.Width = 25
-
-	// Setup storage category list
-	categories := game.GetCategories()
-	categoryItems := make([]list.Item, len(categories))
-	for i, cat := range categories {
-		categoryItems[i] = listItem{title: cat.Name}
-	}
-
-	storageCategoryList := list.New(categoryItems, compactDelegate{}, 20, 4)
-	storageCategoryList.SetShowPagination(false)
-	storageCategoryList.SetShowHelp(false)
-	storageCategoryList.SetShowStatusBar(false)
-	storageCategoryList.SetFilteringEnabled(false)
-	storageCategoryList.SetShowTitle(false)
-
-	// Setup storage table
-	storageColumns := []table.Column{
-		{Title: "Name", Width: 20},
-		{Title: "Qty", Width: 15},
-		{Title: "Value (g)", Width: 8},
-		// {Title: "Tags", Width: 25},
-	}
-
-	storageTable := table.New(
-		table.WithColumns(storageColumns),
-		table.WithRows([]table.Row{}), // Will populate with filtered results
-		table.WithFocused(false),
-		table.WithHeight(20), // FIX: This doesn't seem to do anything, probably gets over-written someewhere
-	)
-
-	tableStyles := table.DefaultStyles()
-	tableStyles.Header = tableStyles.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color(styles.BorderColor)).
-		BorderBottom(true).
-		Bold(false)
-	tableStyles.Selected = tableStyles.Selected.
-		Foreground(lipgloss.Color(styles.BlackColor)).
-		Background(lipgloss.Color(styles.FocusedColor)).
-		Bold(false)
-	storageTable.SetStyles(tableStyles)
-
-	// Setup modal input
-	modalInput := textinput.New()
-	modalInput.Placeholder = "Enter name..."
-	modalInput.CharLimit = 50
-
-	// Setup activity viewport
-	activityViewport := viewport.New(78, 5)
-	activityViewport.SetContent("Activity log initialized...")
+	// Initialize view components
+	navigation := shared.NewNavigationView()
+	storageView := storage.New()
+	activity := shared.NewActivityView()
+	command := shared.NewCommandView()
+	modal := shared.NewModalView()
 
 	m := Model{
-		Width:               80,
-		Height:              24,
-		FocusedView:         FocusGameView,
-		ActiveTab:           0,
-		GameState:           gameState,
-		leftTabsList:        leftTabsList,
-		detailsList:         detailsList,
-		resourcesTable:      resourcesTable,
-		commandInput:        commandInput,
-		commandMode:         false,
-		activityViewport:    activityViewport,
-		storageSearchInput:  storageSearchInput,
-		storageCategoryList: storageCategoryList,
-		storageTable:        storageTable,
-		storageSearchActive: false,
-		activeModal:         ModalNone,
-		modalInput:          modalInput,
-		storageFocus:        StorageFocusCategory,
+		Width:          80,
+		Height:         24,
+		FocusedView:    FocusGameView,
+		ActiveTab:      0,
+		GameState:      gameState,
+		navigation:     navigation,
+		storage:        storageView,
+		activity:       activity,
+		command:        command,
+		modal:          modal,
+		detailsList:    detailsList,
+		resourcesTable: resourcesTable,
 	}
 
-	m.updateActivityViewport()
-	m.activityViewport.GotoBottom()
+	// Initialize activity log
+	m.activity.UpdateContent(gameState)
+	m.activity.GotoBottom()
 
-	// Update sotrage table with all items initiallly
-	m.updateStorageTable()
+	// Update storage table with all items initially
+	m.storage.UpdateTable(gameState)
 
 	return m
 }
@@ -258,94 +149,15 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-// AddLogEntry entry to activity log
+// AddLogEntry adds an entry to the activity log
 func (m *Model) AddLogEntry(category, action, details string) {
 	m.GameState.ActivityLog.AddEntry(category, action, details)
 
-	// Update viewport content
-	m.updateActivityViewport()
+	// Update activity view content
+	m.activity.UpdateContent(m.GameState)
 
 	// Auto-scroll to bottom if not focused
 	if m.FocusedView != FocusActivityLog {
-		m.activityViewport.GotoBottom()
+		m.activity.GotoBottom()
 	}
-}
-
-func (m *Model) formatActivityLog() string {
-	var content strings.Builder
-
-	// Include ALL entries from game state
-	for _, entry := range m.GameState.ActivityLog.GetEntries() {
-		timestamp := entry.Timestamp.Format("15:04")
-
-		color := getCategoryColor(entry.Category)
-
-		categoryStyle := lipgloss.NewStyle().
-			Foreground(color).
-			Bold(true)
-
-		// Fixed-width category (12 characters)
-		paddedCategory := fmt.Sprintf("%-11s", entry.Category)
-
-		line := fmt.Sprintf("[%s] %s  %s",
-			timestamp,
-			categoryStyle.Render(paddedCategory),
-			entry.Action,
-		)
-
-		if entry.Details != "" {
-			line += " " + entry.Details
-		}
-
-		content.WriteString("\n" + line)
-	}
-
-	return content.String()
-}
-
-// getCategoryColor returns the color for a category
-func getCategoryColor(category string) lipgloss.Color {
-	categoryColors := map[string]lipgloss.Color{
-		"Combat":      "196",
-		"Woodcutting": "34",
-		"Fishing":     "33",
-		"Market":      "226",
-		"Navigation":  "205",
-		"System":      "240",
-		"Command":     "240",
-		"Storage":     "33",
-	}
-
-	if color, ok := categoryColors[category]; ok {
-		return color
-	}
-	return "255"
-}
-
-// Update viewport content
-func (m *Model) updateActivityViewport() {
-	content := m.formatActivityLog()
-	m.activityViewport.SetContent(content)
-}
-
-// Update storage table with filtered items
-func (m *Model) updateStorageTable() {
-	searchTerm := m.storageSearchInput.Value()
-	filtered := m.GameState.GetFilteredItems(searchTerm)
-
-	rows := make([]table.Row, len(filtered))
-	for i, item := range filtered {
-
-		// Right-align Qty and Value columns
-		qtyStr := fmt.Sprintf("%d", item.Quantity)
-		valueStr := fmt.Sprintf("%d", item.Value)
-
-		rows[i] = table.Row{
-			item.Name,
-			fmt.Sprintf("%8s", qtyStr),   // Right-align with padding
-			fmt.Sprintf("%8s", valueStr), // Right-align with padding
-		}
-	}
-
-	m.storageTable.SetRows(rows)
 }
