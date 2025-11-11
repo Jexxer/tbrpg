@@ -63,8 +63,8 @@ func (v *View) View(width, height int) string {
 
 	// Table panel with focus indicator
 	tableStyle := lipgloss.NewStyle().
-		Width(tableWidth).
-		Height(ws.MainPanel.Height - ws.Storage.Search.Height - (ws.BorderOffset * 2))
+		Width(tableWidth)
+		// Height(ws.MainPanel.Height - ws.Storage.Search.Height - (ws.BorderOffset * 2))
 
 	// Add border to show focus
 	if v.focus == FocusTable {
