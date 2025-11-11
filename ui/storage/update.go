@@ -110,5 +110,5 @@ func (v *View) Update(msg tea.Msg, gameState *game.State, onLog func(category, a
 func (v *View) UpdateSize(width, height int) {
 	ws := styles.GetWindowSizes(width, height)
 	v.categoryList.SetHeight(4)
-	v.table.SetHeight(ws.MainPanel.Height - 10)
+	v.table.SetHeight(ws.MainPanel.Height - 7)
 }
