@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/jexxer/tbrpg/ui/styles"
 )
 
@@ -27,7 +28,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.activityViewport.Height = ws.ActivityPanel.Height - ws.BorderOffset
 
 		// Update storage components
-		m.storageCategoryList.SetHeight(8)
+		m.storageCategoryList.SetHeight(4)
 		m.storageTable.SetHeight(ws.MainPanel.Height - 10)
 
 		return m, nil
@@ -140,7 +141,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter":
 				// Execute command (implement later)
 				cmdText := m.commandInput.Value()
-				_ = cmdText // TODO: handle command
+				styledText := lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
+				m.AddLogEntry("Command", "Ran: ", styledText.Render(cmdText))
+
 				m.commandInput.Reset()
 				m.commandMode = false
 				m.commandInput.Blur()

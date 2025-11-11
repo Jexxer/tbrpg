@@ -78,7 +78,6 @@ type listItem struct {
 }
 
 func (i listItem) Title() string       { return i.title }
-func (i listItem) Description() string { return "" }
 func (i listItem) FilterValue() string { return i.title }
 
 type compactDelegate struct{}
@@ -164,6 +163,7 @@ func InitialModel() Model {
 	commandInput := textinput.New()
 	commandInput.Placeholder = "Enter command..." // TODO: bugged rn, only shows first char of placeholder
 	commandInput.CharLimit = 100
+	commandInput.Width = 25
 
 	// Initialize game state
 	gameState := game.NewState()
@@ -181,7 +181,8 @@ func InitialModel() Model {
 		categoryItems[i] = listItem{title: cat.Name}
 	}
 
-	storageCategoryList := list.New(categoryItems, compactDelegate{}, 20, 8)
+	storageCategoryList := list.New(categoryItems, compactDelegate{}, 20, 4)
+	storageCategoryList.SetShowPagination(false)
 	storageCategoryList.SetShowHelp(false)
 	storageCategoryList.SetShowStatusBar(false)
 	storageCategoryList.SetFilteringEnabled(false)

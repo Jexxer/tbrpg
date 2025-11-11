@@ -47,7 +47,7 @@ func RenderStorageView(params StorageViewParams) string {
 	searchBar := searchBarStyle.Render("Search: " + params.SearchInputView + " (press / to search)")
 
 	// Layout: Category list on left, table on right
-	tableWidth := ws.MainPanel.Width - ws.Storage.Categories.Width - 5 // includes border (5 is magical?)
+	tableWidth := ws.MainPanel.Width - ws.Storage.Categories.Width - (ws.BorderOffset * 2) - 1 // category only has border on 1 side
 
 	// Category panel with focus indicator
 	categoryStyle := lipgloss.NewStyle().
@@ -72,16 +72,16 @@ func RenderStorageView(params StorageViewParams) string {
 	// Table panel with focus indicator
 	tableStyle := lipgloss.NewStyle().
 		Width(tableWidth).
-		Height(ws.MainPanel.Height - ws.Storage.Search.Height - 4)
+		Height(ws.MainPanel.Height - ws.Storage.Search.Height - (ws.BorderOffset * 2))
 
 	// Add border to show focus
 	if params.StorageFocus == StorageFocusTable {
 		tableStyle = tableStyle.
-			Border(lipgloss.RoundedBorder()).
+			Border(lipgloss.NormalBorder()).
 			BorderForeground(lipgloss.Color(params.FocusedColor))
 	} else {
 		tableStyle = tableStyle.
-			Border(lipgloss.RoundedBorder()).
+			Border(lipgloss.NormalBorder()).
 			BorderForeground(lipgloss.Color("#9E9E9E"))
 	}
 

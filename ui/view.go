@@ -201,12 +201,12 @@ func (m Model) renderStorageView() string {
 	searchBarHeight := 3
 
 	// Update input width
-	m.storageSearchInput.Width = availableWidth - 33
+	m.storageSearchInput.Width = availableWidth - 33 // padding and strings for help
 
 	// Update table dimensions
-	qtyWidth := 4
-	valueWidth := 6
-	nameWidth := 10
+	qtyWidth := 10                                                                        // enough for 999,999 before rolling over to 1M
+	valueWidth := 10                                                                      // like above
+	nameWidth := availableWidth - ws.Storage.Categories.Width - qtyWidth - valueWidth - 9 // remaining amount
 
 	m.storageTable.Columns()[0].Width = nameWidth
 	m.storageTable.Columns()[1].Width = qtyWidth
